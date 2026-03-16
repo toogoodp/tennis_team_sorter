@@ -1,5 +1,5 @@
 # Install Streamlit
-!pip install pip -U
+!pip install --upgrade pip
 !pip install streamlit
 
 import streamlit as st
