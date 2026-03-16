@@ -102,6 +102,13 @@ def build_player_dictionary(players):
     return {player['name']: {'gender': player['gender'], 'rating': player['rating']}
             for player in players}
 
+# convert players dictionary to players dataframe
+def players_df(players):  
+    players_df = (
+    pd.DataFrame.from_dict(players, orient="index")
+      .reset_index()
+      .rename(columns={"index": "name"})
+)
 
 # --- Main Program ---
 if __name__ == "__main__":
