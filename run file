@@ -1,0 +1,2 @@
+scheduler = TennisScheduler(players_list)
+rounds = scheduler.schedule_tournament(num_rounds=4)
