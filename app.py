@@ -131,9 +131,9 @@ if __name__ == "__main__":
 
 # ---- Replace this import + function with your real package call ----
 #import itertools
-import collections
+#import collections
 #from collections import defaultdict
-import random
+#import random
 
 class TennisScheduler:
     def __init__(self, players):
