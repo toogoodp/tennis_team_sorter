@@ -1,3 +1,6 @@
+# Install Streamlit
+!pip install streamlit
+
 import streamlit as st
 import pandas as pd
 
@@ -7,39 +10,116 @@ st.title("Tennis Rotations (4 rounds)")
 st.write("Enter players (name, gender, rating), then click **Generate rotations**.")
 
 # Editable input table
-starter = pd.DataFrame(
-    [
-        {"name": "Alex", "gender": "M", "rating": 3.5},
-        {"name": "Blair", "gender": "F", "rating": 3.0},
-        {"name": "Casey", "gender": "M", "rating": 4.0},
-        {"name": "Devon", "gender": "F", "rating": 2.5},
-    ]
-)
+def get_players():
+    """
+    Prompts user to enter tennis players with gender and rating.
+    Returns a list of player dictionaries.
+    """
+    players = []
 
-if "players_df" not in st.session_state:
-    st.session_state.players_df = starter
+    print("\n" + "=" * 50)
+    print("       TENNIS PLAYER ENTRY SYSTEM")
+    print("=" * 50)
+    print("Enter player details one at a time.")
+    print("Gender: Enter 'M' for male or 'F' for female")
+    print("Rating: Enter a number (e.g. 3.0, 3.5, 4.0, 4.5, 5.0)")
+    print("Type 'DONE' when finished entering players.")
+    print("=" * 50 + "\n")
 
-players_df = st.data_editor(
-    st.session_state.players_df,
-    num_rows="dynamic",
-    use_container_width=True,
-    column_config={
-        "name": st.column_config.TextColumn("Name", required=True),
-        "gender": st.column_config.SelectboxColumn("Gender", options=["F", "M"], required=True),
-        "rating": st.column_config.NumberColumn("Rating", min_value=0.0, max_value=10.0, step=0.5, required=True),
-    },
-)
+    while True:
+        # Get player name
+        name = input("Enter player name (or 'DONE' to finish): ").strip()
 
-def clean_players(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    df["name"] = df["name"].astype(str).str.strip()
-    df = df[df["name"] != ""]
-    df["gender"] = df["gender"].astype(str).str.strip().str.upper()
-    df = df[df["gender"].isin(["F", "M"])]
-    df["rating"] = pd.to_numeric(df["rating"], errors="coerce")
-    df = df.dropna(subset=["rating"])
-    df = df.drop_duplicates(subset=["name"], keep="first")
-    return df.reset_index(drop=True)
+        if name.upper() == 'DONE':
+            if len(players) < 4:
+                print("⚠️  You need at least 4 players for a match. Please add more players.")
+                continue
+            break
+
+        if not name:
+            print("❌ Name cannot be empty. Please try again.\n")
+            continue
+
+        # Check for duplicate names
+        if any(p['name'].lower() == name.lower() for p in players):
+            print(f"❌ '{name}' is already in the list. Please use a unique name.\n")
+            continue
+
+        # Get gender
+        while True:
+            gender = input(f"  Enter gender for {name} (M/F): ").strip().upper()
+            if gender in ('M', 'F'):
+                break
+            print("  ❌ Invalid input. Please enter 'M' or 'F'.")
+
+        # Get rating
+        while True:
+            try:
+                rating = float(input(f"  Enter rating for {name} (e.g. 3.0 - 5.0): ").strip())
+                if 1.0 <= rating <= 7.0:
+                    break
+                print("  ❌ Rating should be between 1.0 and 7.0. Please try again.")
+            except ValueError:
+                print("  ❌ Invalid rating. Please enter a number (e.g. 3.5).")
+
+        # Add player to list
+        player = {
+            'name': name,
+            'gender': gender,
+            'rating': rating
+        }
+        players.append(player)
+        print(f"  ✅ {name} ({gender}, Rating: {rating}) added!\n")
+
+    return players
+
+
+def display_players(players):
+    """Display the final list of players in a formatted table."""
+    print("\n" + "=" * 50)
+    print("         REGISTERED PLAYERS")
+    print("=" * 50)
+    print(f"{'#':<5} {'Name':<20} {'Gender':<10} {'Rating':<10}")
+    print("-" * 50)
+    for i, player in enumerate(players, 1):
+        gender_label = "Male" if player['gender'] == 'M' else "Female"
+        print(f"{i:<5} {player['name']:<20} {gender_label:<10} {player['rating']:<10}")
+    print("=" * 50)
+    print(f"Total players: {len(players)}")
+
+    # Summary counts
+    men = sum(1 for p in players if p['gender'] == 'M')
+    women = sum(1 for p in players if p['gender'] == 'F')
+    print(f"  Men: {men}  |  Women: {women}")
+    print("=" * 50 + "\n")
+
+
+def build_player_dictionary(players):
+    """
+    Converts the player list into a dictionary keyed by player name.
+    Returns a dict of dicts.
+    """
+    return {player['name']: {'gender': player['gender'], 'rating': player['rating']}
+            for player in players}
+
+
+# --- Main Program ---
+if __name__ == "__main__":
+    # Step 1: Collect player data
+    players_list = get_players()
+
+    # Step 2: Display collected players
+    display_players(players_list)
+
+    # Step 3: Build dictionary
+    players_dict = build_player_dictionary(players_list)
+
+    # Step 4: Show the resulting dictionary
+    #print("Player Dictionary:")
+    #print("-" * 50)
+    #for name, details in players_dict.items():
+        #print(f"  '{name}': {details}")
+    #print()
 
 # ---- Replace this import + function with your real package call ----
 import itertools
@@ -225,6 +305,8 @@ class TennisScheduler:
         sorted_courts = sorted(self.court_history.items(), key=lambda x: x[1], reverse=True)
         for pair, count in sorted_courts[:10]:  # Top 10
             print(f"  {pair[0]} & {pair[1]}: {count} times")
+
+
 
 scheduler = TennisScheduler(players_list)
 rounds = scheduler.schedule_tournament(num_rounds=4)
