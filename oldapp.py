@@ -4,6 +4,8 @@
 
 import streamlit as st
 import pandas as pd
+import itertools
+from collections import defaultdict
 
 st.set_page_config(page_title="Tennis Rotations", layout="wide")
 st.title("Tennis Rotations (4 rounds)")
@@ -11,71 +13,22 @@ st.title("Tennis Rotations (4 rounds)")
 st.write("Enter players (name, gender, rating), then click **Generate rotations**.")
 
 # Editable input table
-def get_players():
-    """
-    Prompts user to enter tennis players with gender and rating.
-    Returns a list of player dictionaries.
-    """
-    players = []
 
-    print("\n" + "=" * 50)
-    print("       TENNIS PLAYER ENTRY SYSTEM")
-    print("=" * 50)
-    print("Enter player details one at a time.")
-    print("Gender: Enter 'M' for male or 'F' for female")
-    print("Rating: Enter a number (e.g. 3.0, 3.5, 4.0, 4.5, 5.0)")
-    print("Type 'DONE' when finished entering players.")
-    print("=" * 50 + "\n")
-
-    while True:
-        # Get player name
-        name = input("Enter player name (or 'DONE' to finish): ").strip()
-
-        if name.upper() == 'DONE':
-            if len(players) < 4:
-                print("⚠️  You need at least 4 players for a match. Please add more players.")
-                continue
-            break
-
-        if not name:
-            print("❌ Name cannot be empty. Please try again.\n")
-            continue
-
-        # Check for duplicate names
-        if any(p['name'].lower() == name.lower() for p in players):
-            print(f"❌ '{name}' is already in the list. Please use a unique name.\n")
-            continue
-
-        # Get gender
-        while True:
-            gender = input(f"  Enter gender for {name} (M/F): ").strip().upper()
-            if gender in ('M', 'F'):
-                break
-            print("  ❌ Invalid input. Please enter 'M' or 'F'.")
-
-        # Get rating
-        while True:
-            try:
-                rating = float(input(f"  Enter rating for {name} (e.g. 3.0 - 5.0): ").strip())
-                if 1.0 <= rating <= 7.0:
-                    break
-                print("  ❌ Rating should be between 1.0 and 7.0. Please try again.")
-            except ValueError:
-                print("  ❌ Invalid rating. Please enter a number (e.g. 3.5).")
-
-        # Add player to list
-        player = {
-            'name': name,
-            'gender': gender,
-            'rating': rating
-        }
-        players.append(player)
-        print(f"  ✅ {name} ({gender}, Rating: {rating}) added!\n")
-
-    return players
+def get_players_streamlit():
+    """Get players using Streamlit UI instead of console input"""
+    st.subheader("Enter Players")
+    
+    # Use data_editor for table input
+    player_data = st.data_editor(
+        pd.DataFrame(columns=['Name', 'Gender', 'Rating']),
+        num_rows="dynamic",
+        use_container_width=True
+    )
+    
+    return player_data
 
 
-def display_players(players):
+def display_players(player_data):
     """Display the final list of players in a formatted table."""
     print("\n" + "=" * 50)
     print("         REGISTERED PLAYERS")
@@ -101,15 +54,15 @@ def build_player_dictionary(players):
     Returns a dict of dicts.
     """
     return {player['name']: {'gender': player['gender'], 'rating': player['rating']}
-            for player in players}
+            for player in player_data}
 
 # convert players dictionary to players dataframe
-def players_df(players):  
-    players_df = (
-    pd.DataFrame.from_dict(players, orient="index")
-      .reset_index()
-      .rename(columns={"index": "name"})
-)
+#def players_df(players):  
+  #  players_df = (
+   # pd.DataFrame.from_dict(players, orient="index")
+    #  .reset_index()
+    #  .rename(columns={"index": "name"})
+#)
 
 # --- Main Program ---
 if __name__ == "__main__":
@@ -129,11 +82,10 @@ if __name__ == "__main__":
         #print(f"  '{name}': {details}")
     #print()
 
-# ---- Replace this import + function with your real package call ----
-#import itertools
-#import collections
-#from collections import defaultdict
-#import random
+if 'players_list' not in st.session_state:
+    st.session_state.players_list = []
+if 'rotations' not in st.session_state:
+    st.session_state.rotations = None
 
 class TennisScheduler:
     def __init__(self, players):
