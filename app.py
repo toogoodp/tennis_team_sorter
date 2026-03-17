@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import itertools
 from collections import defaultdict
+from TennisScheduler import TennisScheduler
 
 st.set_page_config(page_title="Tennis Rotations", layout="wide")
 st.title("Tennis Rotations (4 rounds)")
